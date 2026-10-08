@@ -1,0 +1,24 @@
+pkgname=mud
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Lossless music search, download, and Discogs tagging CLI'
+arch=('x86_64')
+license=('MIT')
+depends=('glibc')
+makedepends=('cargo')
+optdepends=('flac: write FLAC metadata with --discogs-release')
+
+build() {
+    CFLAGS='' CXXFLAGS='' RUSTFLAGS='' cargo build \
+        --manifest-path "$startdir/../Cargo.toml" \
+        --release \
+        --locked \
+        --package mudd
+}
+
+package() {
+    install -Dm755 "$startdir/../target/release/mud" \
+        "$pkgdir/usr/bin/mud"
+    install -Dm644 "$startdir/../README.md" \
+        "$pkgdir/usr/share/doc/mud/README.md"
+}

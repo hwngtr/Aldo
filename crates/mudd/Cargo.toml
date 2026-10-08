@@ -1,0 +1,38 @@
+[package]
+name = "mudd"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "mud"
+path = "src/main.rs"
+
+[features]
+default = []
+# The loopback HTTP daemon. Off by default, because MuD is a single-user CLI on
+# one machine; it exists so a GUI shell can drive the same libraries.
+api = ["dep:mud-api", "dep:axum"]
+
+[dependencies]
+mud-core.workspace = true
+mud-store.workspace = true
+mud-net.workspace = true
+mud-catalog.workspace = true
+mud-soulseek.workspace = true
+mud-api = { workspace = true, optional = true }
+axum = { version = "0.8", optional = true }
+clap = { version = "4", features = ["derive", "env"] }
+dotenvy = "0.15"
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+mud-testkit = { path = "../mud-testkit" }
+
+[lints]
+workspace = true

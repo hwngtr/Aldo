@@ -1,0 +1,16 @@
+/target
+.env
+!.env.example
+**/*.rs.bk
+.mud/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+.DS_Store
+.staging/
+*.flac
+*.flac.part
+packaging/*.pkg.tar.*
+packaging/pkg/
+packaging/src/
+codex-session-*.md

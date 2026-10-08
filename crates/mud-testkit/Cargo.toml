@@ -1,0 +1,16 @@
+[package]
+name = "mud-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Fixtures shared by more than one crate's tests. Only ever a dev-dependency, so
+# nothing here reaches a release binary.
+[dependencies]
+axum = "0.8"
+tokio.workspace = true
+
+[lints]
+workspace = true

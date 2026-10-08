@@ -1,0 +1,27 @@
+[package]
+name = "mud-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+async-trait = "0.1"
+thiserror.workspace = true
+# `Sha256::of` hashes release identities and audio content, so the digest is
+# persisted and compared across sessions: a subtly wrong compression function
+# would produce digests that never match and silently disable deduplication,
+# with no error anywhere. Already compiled into the workspace through
+# `sqlx-core`, so this costs no new crate. `default-features = false` keeps it
+# pure computation, which is all `mud-core` allows itself.
+sha2 = { version = "0.10", default-features = false }
+
+[dev-dependencies]
+# Only the test asserting a stored spelling equals the serde spelling needs to
+# render one; the library itself never produces JSON.
+serde_json = "1"
+
+[lints]
+workspace = true
