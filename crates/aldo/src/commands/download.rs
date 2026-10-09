@@ -57,15 +57,25 @@ async fn download(settings: &Settings, args: &DownloadArgs) -> Result<(), Downlo
         Err(e) => return Err(DownloadError::Store(e)),
     };
 
-    let selected_release = match args.discogs_release {
-        Some(raw_id) => Some(raw_id),
-        None => candidates
-            .selected_discogs_release(candidate_id)
-            .await?
-            .map(|raw_id| {
-                u32::try_from(raw_id).map_err(|_| DownloadError::CorruptDiscogsReleaseId(raw_id))
-            })
-            .transpose()?,
+    if args.list {
+        print_file_list(args.result_index, &candidate);
+        return Ok(());
+    }
+
+    let selected_release = if args.force {
+        None
+    } else {
+        match args.discogs_release {
+            Some(raw_id) => Some(raw_id),
+            None => candidates
+                .selected_discogs_release(candidate_id)
+                .await?
+                .map(|raw_id| {
+                    u32::try_from(raw_id)
+                        .map_err(|_| DownloadError::CorruptDiscogsReleaseId(raw_id))
+                })
+                .transpose()?,
+        }
     };
 
     let tag_metadata = if let Some(raw_id) = selected_release {
@@ -194,6 +204,21 @@ fn print_header(id: i64, candidate: &LoadedCandidate, total_bytes: ByteSize, pee
         "Candidate #{id}: {artist} - {album} ({} files, {total_bytes}) from peer '{peer}'",
         candidate.files.len()
     );
+}
+
+fn print_file_list(result_index: i64, candidate: &LoadedCandidate) {
+    println!(
+        "Candidate #{}: {} files from peer '{}'",
+        result_index,
+        candidate.files.len(),
+        match &candidate.locator {
+            Locator::SoulSeek(locator) => locator.peer.as_str(),
+            Locator::Torrent(_) => "unknown",
+        }
+    );
+    for (index, file) in candidate.files.iter().enumerate() {
+        println!("  {:>2}. {} ({})", index + 1, file.path, file.size);
+    }
 }
 
 async fn download_all_files(
@@ -585,7 +610,7 @@ enum DownloadError {
     UnsupportedEngine(&'static str),
 
     #[error(
-        "the selected server folder has {files} files, but the matched Discogs release has {tracks} tracks; search again as `Artist - Album` and choose a complete album folder"
+        "the selected server folder has {files} files, but the matched Discogs release has {tracks} tracks; use `aldo download <index> --force` to download without Discogs metadata"
     )]
     TrackCountMismatch { files: usize, tracks: usize },
 

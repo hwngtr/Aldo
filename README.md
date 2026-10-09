@@ -151,9 +151,21 @@ automatically:
 Aldo matches track numbers from filenames to Discogs tracks. A file containing
 `- 01 -` receives the Discogs title for track 1.
 
-Aldo refuses to tag a folder when its file count does not match the selected
-Discogs release. Search again with `Artist - Album` and choose a complete album
-folder instead of downloading a one-file or unrelated result.
+Inspect a result before downloading it:
+
+```sh
+aldo download 1 --list
+```
+
+If the folder does not match the selected Discogs release, force a download
+without Discogs metadata or tags:
+
+```sh
+aldo download 1 --force
+```
+
+Use `--force` for incomplete, extended, or otherwise unmatched folders. Normal
+downloads still require the file count to match the selected Discogs release.
 
 ## Choosing a different Discogs release
 

@@ -133,6 +133,14 @@ pub struct DownloadArgs {
     /// Override the Discogs release selected by the latest search.
     #[arg(long)]
     pub discogs_release: Option<u32>,
+
+    /// List the files in the selected server folder without downloading.
+    #[arg(long)]
+    pub list: bool,
+
+    /// Download without Discogs matching or metadata tagging.
+    #[arg(long)]
+    pub force: bool,
 }
 
 #[cfg(feature = "api")]
@@ -287,7 +295,26 @@ mod tests {
     fn a_download_command_parses_its_daily_result_index() {
         let cli = parse(&["aldo", "download", "42"]);
         match cli.command {
-            Command::Download(args) => assert_eq!(args.result_index, 42),
+            Command::Download(args) => {
+                assert_eq!(args.result_index, 42);
+                assert!(!args.list);
+                assert!(!args.force);
+            }
+            other => panic!("expected download, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_download_command_accepts_list_and_force() {
+        let cli = parse(&["aldo", "download", "42", "--list"]);
+        match cli.command {
+            Command::Download(args) => assert!(args.list),
+            other => panic!("expected download, got {other:?}"),
+        }
+
+        let cli = parse(&["aldo", "download", "42", "--force"]);
+        match cli.command {
+            Command::Download(args) => assert!(args.force),
             other => panic!("expected download, got {other:?}"),
         }
     }
