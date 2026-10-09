@@ -162,23 +162,50 @@ impl BudgetStore {
         provider: &str,
         now_ms: i64,
     ) -> Result<Result<Duration, Duration>, StoreError> {
-        let snapshot = self.snapshot(provider, now_ms).await?;
+        let mut transaction = self.pool.begin().await?;
+        let row = sqlx::query(
+            "SELECT capacity, available, refilled_at, window_ms, min_interval_ms, last_used_at
+             FROM rate_budget WHERE provider = ?",
+        )
+        .bind(provider)
+        .fetch_optional(&mut *transaction)
+        .await?
+        .ok_or_else(|| StoreError::not_found("rate_budget"))?;
+
+        let state = BudgetState {
+            capacity: narrow_u32(row.try_get("capacity")?, "rate_budget.capacity")?,
+            available: narrow_u32(row.try_get("available")?, "rate_budget.available")?,
+            refilled_at: row.try_get("refilled_at")?,
+            window: Duration::from_millis(millis_from_stored(
+                row.try_get("window_ms")?,
+                "rate_budget.window_ms",
+            )?),
+            min_interval: Duration::from_millis(millis_from_stored(
+                row.try_get("min_interval_ms")?,
+                "rate_budget.min_interval_ms",
+            )?),
+            last_used_at: row.try_get("last_used_at")?,
+        };
+        let snapshot = refill(state, now_ms);
         let retry_after = snapshot.retry_after;
 
         if retry_after.is_zero() && snapshot.available > 0 {
             sqlx::query(
                 "UPDATE rate_budget
-                 SET available = available - 1, refilled_at = ?, last_used_at = ?
+                 SET available = ?, refilled_at = ?, last_used_at = ?
                  WHERE provider = ?",
             )
+            .bind(i64::from(snapshot.available - 1))
             .bind(now_ms)
             .bind(now_ms)
             .bind(provider)
-            .execute(&self.pool)
+            .execute(&mut *transaction)
             .await?;
+            transaction.commit().await?;
             return Ok(Ok(Duration::ZERO));
         }
 
+        transaction.commit().await?;
         Ok(Err(retry_after.max(Duration::from_millis(1))))
     }
 }
