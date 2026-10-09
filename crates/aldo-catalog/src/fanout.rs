@@ -136,7 +136,7 @@ pub async fn discogs(
 
     let record = match service {
         None => FanoutRecord::not_configured(),
-        Some(service) => match service.search(query, limit, now_ms).await {
+        Some(service) => match service.search_symmetric(query, limit, now_ms).await {
             Ok(found) => FanoutRecord::done(found),
             Err(CatalogSearchError::RateLimited { retry_after }) => {
                 FanoutRecord::rate_limited(retry_after)

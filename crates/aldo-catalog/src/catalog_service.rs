@@ -136,6 +136,45 @@ impl CatalogService {
         })
     }
 
+    /// Searches both interpretations of a structured `artist - album` query.
+    ///
+    /// Discogs field searches are directional, while users commonly type
+    /// either order. Duplicate release IDs are merged before the limit is
+    /// applied to the displayed result.
+    pub async fn search_symmetric(
+        &self,
+        query: &SearchQuery,
+        limit: u32,
+        now_ms: i64,
+    ) -> Result<CatalogSearchOutcome, CatalogSearchError> {
+        if query.artist.is_none() || query.album.is_none() {
+            return self.search(query, limit, now_ms).await;
+        }
+
+        let first = self.search(query, limit, now_ms).await?;
+        let second = self
+            .search(&query.swapped_artist_album(), limit, now_ms)
+            .await?;
+
+        let mut matches = first.matches;
+        for row in second.matches {
+            if !matches
+                .iter()
+                .any(|existing| existing.discogs_release_id == row.discogs_release_id)
+            {
+                matches.push(row);
+            }
+        }
+        matches.truncate(limit.clamp(1, MAX_RELEASE_LIMIT) as usize);
+
+        Ok(CatalogSearchOutcome {
+            matches,
+            raw_hits: first.raw_hits.saturating_add(second.raw_hits),
+            fetched: first.fetched.saturating_add(second.fetched),
+            cached: first.cached.saturating_add(second.cached),
+        })
+    }
+
     /// Consumes one unit of the Discogs budget.
     async fn spend(&self, now_ms: i64) -> Result<(), CatalogSearchError> {
         match self.budgets.acquire(PROVIDER, now_ms).await? {

@@ -20,6 +20,33 @@ sudo pacman -S flac
 
 After that, `aldo` works from any directory.
 
+## Install from source
+
+From the project directory:
+
+```sh
+cargo build --release --locked -p aldo
+mkdir -p ~/.local/bin
+install -Dm755 target/release/aldo ~/.local/bin/aldo
+export PATH="$HOME/.local/bin:$PATH"
+aldo --version
+```
+
+Create the local configuration file:
+
+```sh
+mkdir -p ~/.config/aldo
+chmod 700 ~/.config/aldo
+nano ~/.config/aldo/.env
+chmod 600 ~/.config/aldo/.env
+```
+
+Then run a search:
+
+```sh
+aldo search "Artist - Album"
+```
+
 ## First-time setup
 
 Aldo uses these defaults:
@@ -43,12 +70,17 @@ To keep the token between shell sessions, add the export to `~/.bashrc` or
 
 ## Search
 
-Use the format:
+Use either order for structured searches:
 
 ```text
 Artist - Album
+Album - Artist
 Artist - Album - Year
+Album - Artist - Year
 ```
+
+For a dashed query, Aldo searches both interpretations and merges duplicate
+Discogs releases. SoulSeek searches the same plain words regardless of order.
 
 Use the structured form for a less ambiguous automatic Discogs match. A bare
 phrase such as `besame mucho` is still valid, but it can return unrelated

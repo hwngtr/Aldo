@@ -302,10 +302,11 @@ fn mission_hint(
         }
         return Some(format!(
             "no peer files returned after {}s; sharing {}. Results come only from \
-             peers online right now. Retry with `--slsk-timeout 20`; forwarding port \
+             peers online right now. Retry with `--slsk-timeout {}`; forwarding port \
              {} can improve availability",
             search_timeout.as_secs(),
             shared_directories.join(", "),
+            search_timeout.as_secs().saturating_mul(2).max(20),
             listen_port
         ));
     }
@@ -564,6 +565,17 @@ mod tests {
         .expect("a hint");
         assert!(hint.contains("peer files returned"), "{hint}");
         assert!(hint.contains("--slsk-timeout 20"), "{hint}");
+        let hint = mission_hint(
+            0,
+            0,
+            0,
+            true,
+            &["/music".to_owned()],
+            Duration::from_secs(30),
+            2234,
+        )
+        .expect("a hint");
+        assert!(hint.contains("--slsk-timeout 60"), "{hint}");
     }
 
     #[test]

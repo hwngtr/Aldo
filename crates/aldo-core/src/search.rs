@@ -138,6 +138,21 @@ impl SearchQuery {
             (None, None) => self.phrase.clone(),
         }
     }
+
+    /// Returns the same structured query with artist and album exchanged.
+    ///
+    /// A dashed query is inherently ambiguous: either side may be the artist.
+    /// Providers that support structured fields can search both interpretations.
+    #[must_use]
+    pub fn swapped_artist_album(&self) -> Self {
+        Self {
+            phrase: self.phrase.clone(),
+            artist: self.album.clone(),
+            album: self.artist.clone(),
+            year: self.year,
+            filters: self.filters,
+        }
+    }
 }
 
 /// Splits on a hyphen surrounded by whitespace, which is how people write
@@ -217,6 +232,15 @@ mod tests {
         let query = parse("Radiohead - OK Computer");
         assert_eq!(query.soulseek_query(), "Radiohead OK Computer");
         assert!(!query.soulseek_query().contains(':'));
+    }
+
+    #[test]
+    fn swapping_artist_and_album_preserves_the_plain_soulseek_query() {
+        let query = parse("Purple Rain - Prince");
+        assert_eq!(
+            query.swapped_artist_album().soulseek_query(),
+            "Prince Purple Rain"
+        );
     }
 
     #[test]
