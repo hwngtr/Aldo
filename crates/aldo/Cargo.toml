@@ -1,0 +1,38 @@
+[package]
+name = "aldo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "aldo"
+path = "src/main.rs"
+
+[features]
+default = []
+# The loopback HTTP daemon. Off by default, because Aldo is a single-user CLI on
+# one machine; it exists so a GUI shell can drive the same libraries.
+api = ["dep:aldo-api", "dep:axum"]
+
+[dependencies]
+aldo-core.workspace = true
+aldo-store.workspace = true
+aldo-net.workspace = true
+aldo-catalog.workspace = true
+aldo-soulseek.workspace = true
+aldo-api = { workspace = true, optional = true }
+axum = { version = "0.8", optional = true }
+clap = { version = "4", features = ["derive", "env"] }
+dotenvy = "0.15"
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+aldo-testkit = { path = "../aldo-testkit" }
+
+[lints]
+workspace = true

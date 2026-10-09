@@ -1,7 +1,7 @@
-pkgname=mud
+pkgname=aldo
 pkgver=0.1.0
 pkgrel=1
-pkgdesc='Lossless music search, download, and Discogs tagging CLI'
+pkgdesc='Lossless album search, download, and Discogs tagging CLI'
 arch=('x86_64')
 license=('MIT')
 depends=('glibc')
@@ -13,12 +13,12 @@ build() {
         --manifest-path "$startdir/../Cargo.toml" \
         --release \
         --locked \
-        --package mudd
+        --package aldo
 }
 
 package() {
-    install -Dm755 "$startdir/../target/release/mud" \
-        "$pkgdir/usr/bin/mud"
+    install -Dm755 "$startdir/../target/release/aldo" \
+        "$pkgdir/usr/bin/aldo"
     install -Dm644 "$startdir/../README.md" \
-        "$pkgdir/usr/share/doc/mud/README.md"
+        "$pkgdir/usr/share/doc/aldo/README.md"
 }

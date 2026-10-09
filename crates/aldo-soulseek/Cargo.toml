@@ -1,0 +1,20 @@
+[package]
+name = "aldo-soulseek"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+aldo-core.workspace = true
+async-trait = "0.1"
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+# The only maintained Rust implementation of the protocol. Blocking and
+# dependency-free, so it is driven from a dedicated thread.
+soulseek-rs-lib = "19.1.0"
+
+[lints]
+workspace = true

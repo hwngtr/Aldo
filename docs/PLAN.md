@@ -1,4 +1,4 @@
-# MuD implementation plan
+# Aldo implementation plan
 
 Phase plan, schema rationale, and the decisions that are not obvious from the
 code. See `README.md` for how to build and run.
@@ -148,7 +148,7 @@ official/promotion/bootleg. See below.
 
 Both were found by running a captured response through the mapper rather than
 trusting a hand-written fixture. See
-`crates/mud-api/tests/real_discogs.rs`.
+`crates/aldo-api/tests/real_discogs.rs`.
 
 **`ReleaseStatus` is the Discogs approval status.** Values are `Accepted`,
 `Draft`, `Deleted`, `Rejected`. It is not the MusicBrainz
@@ -177,7 +177,7 @@ Per Picard's tag map. The three rules that cause bugs:
 
 | Path | Proxied how |
 |---|---|
-| RutTracker, Nyaa, Discogs, MusicBrainz | `mud-net` `ProxyConfig`, SOCKS5 or HTTP |
+| RutTracker, Nyaa, Discogs, MusicBrainz | `aldo-net` `ProxyConfig`, SOCKS5 or HTTP |
 | SoulSeek | **Not possible.** `soulseek-rs-lib` owns its socket. Its D-network also needs inbound reachability, which a proxy cannot give. |
 | qbittorrent | Separate `Proxy\Host` setting in `qBittorrent.conf` |
 

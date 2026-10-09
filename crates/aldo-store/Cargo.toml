@@ -1,0 +1,25 @@
+[package]
+name = "aldo-store"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+aldo-core.workspace = true
+serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "sqlite",
+    "macros",
+    "migrate",
+] }
+thiserror.workspace = true
+
+[dev-dependencies]
+# Only `#[tokio::test]` needs a runtime: the library itself never names tokio.
+tokio.workspace = true
+
+[lints]
+workspace = true

@@ -18,6 +18,114 @@ dependencies = [
 ]
 
 [[package]]
+name = "aldo"
+version = "0.1.0"
+dependencies = [
+ "aldo-api",
+ "aldo-catalog",
+ "aldo-core",
+ "aldo-net",
+ "aldo-soulseek",
+ "aldo-store",
+ "aldo-testkit",
+ "axum",
+ "clap",
+ "dotenvy",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "aldo-api"
+version = "0.1.0"
+dependencies = [
+ "aldo-catalog",
+ "aldo-core",
+ "aldo-net",
+ "aldo-store",
+ "aldo-testkit",
+ "axum",
+ "rand 0.9.5",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "aldo-catalog"
+version = "0.1.0"
+dependencies = [
+ "aldo-core",
+ "aldo-net",
+ "aldo-store",
+ "aldo-testkit",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "aldo-core"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
+name = "aldo-net"
+version = "0.1.0"
+dependencies = [
+ "aldo-core",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "url",
+]
+
+[[package]]
+name = "aldo-soulseek"
+version = "0.1.0"
+dependencies = [
+ "aldo-core",
+ "async-trait",
+ "soulseek-rs-lib",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "aldo-store"
+version = "0.1.0"
+dependencies = [
+ "aldo-core",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "aldo-testkit"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "tokio",
+]
+
+[[package]]
 name = "alloc-no-stdlib"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1155,114 +1263,6 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "mud-api"
-version = "0.1.0"
-dependencies = [
- "axum",
- "mud-catalog",
- "mud-core",
- "mud-net",
- "mud-store",
- "mud-testkit",
- "rand 0.9.5",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tower",
- "tracing",
-]
-
-[[package]]
-name = "mud-catalog"
-version = "0.1.0"
-dependencies = [
- "mud-core",
- "mud-net",
- "mud-store",
- "mud-testkit",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "mud-core"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
-]
-
-[[package]]
-name = "mud-net"
-version = "0.1.0"
-dependencies = [
- "mud-core",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "url",
-]
-
-[[package]]
-name = "mud-soulseek"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "mud-core",
- "soulseek-rs-lib",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "mud-store"
-version = "0.1.0"
-dependencies = [
- "mud-core",
- "serde_json",
- "sqlx",
- "thiserror",
- "tokio",
-]
-
-[[package]]
-name = "mud-testkit"
-version = "0.1.0"
-dependencies = [
- "axum",
- "tokio",
-]
-
-[[package]]
-name = "mudd"
-version = "0.1.0"
-dependencies = [
- "axum",
- "clap",
- "dotenvy",
- "mud-api",
- "mud-catalog",
- "mud-core",
- "mud-net",
- "mud-soulseek",
- "mud-store",
- "mud-testkit",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

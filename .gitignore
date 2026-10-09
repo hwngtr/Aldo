@@ -2,7 +2,7 @@
 .env
 !.env.example
 **/*.rs.bk
-.mud/
+.aldo/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
