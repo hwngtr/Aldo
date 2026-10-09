@@ -178,7 +178,21 @@ separator.
 
 Server results only come from peers online at search time. A result can
 disappear later. Sharing `~/Music` is enabled by default, and forwarding port
-`2234` usually improves peer availability.
+`2234` usually improves peer availability. Aldo waits eight seconds by default;
+for a thin search, give peers longer to answer:
+
+```sh
+aldo --slsk-timeout 20 search "Prince - Purple Rain"
+```
+
+You can make the share directory explicit in `~/.config/aldo/.env`:
+
+```env
+ALDO_SLSK_SHARED=/home/you/Music
+```
+
+When Aldo reports zero server results, it prints the effective share directory
+and timeout. This confirms which settings the command actually used.
 
 If Discogs reports `not configured`, set:
 

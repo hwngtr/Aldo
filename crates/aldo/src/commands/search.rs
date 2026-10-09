@@ -5,6 +5,7 @@
 //! now, which is the only place a download can come from.
 
 use std::process::ExitCode;
+use std::time::Duration;
 
 use aldo_catalog::{FanoutRecord, record_discogs};
 use aldo_core::provider::DiscoveryProvider;
@@ -99,6 +100,9 @@ async fn soulseek(
     }
 
     let shared = config.shares_anything();
+    let shared_directories = config.shared_directories.clone();
+    let search_timeout = config.search_timeout;
+    let listen_port = config.listen_port;
     let provider = match SoulSeekProvider::connect(config).await {
         Ok(provider) => provider,
         Err(error) => {
@@ -164,7 +168,13 @@ async fn soulseek(
             sessions
                 .finish_fanout(fanout, FanoutStatus::Done, count, latency_ms, None)
                 .await?;
-            print_soulseek(&found, shared);
+            print_soulseek(
+                &found,
+                shared,
+                &shared_directories,
+                search_timeout,
+                listen_port,
+            );
             Ok(count)
         }
         Err(error) => {
@@ -203,7 +213,13 @@ fn print_discogs(record: &FanoutRecord) {
     }
 }
 
-fn print_soulseek(outcome: &aldo_core::provider::ProviderOutcome, sharing: bool) {
+fn print_soulseek(
+    outcome: &aldo_core::provider::ProviderOutcome,
+    sharing: bool,
+    shared_directories: &[String],
+    search_timeout: Duration,
+    listen_port: u16,
+) {
     let rejected = outcome.rejected.total();
     let shown = outcome.candidates.len().min(MAX_SOULSEEK_RESULTS);
     println!();
@@ -223,10 +239,25 @@ fn print_soulseek(outcome: &aldo_core::provider::ProviderOutcome, sharing: bool)
         }
     );
 
-    if mission_hint(outcome.candidates.len(), sharing).is_some() {
+    if mission_hint(
+        outcome.candidates.len(),
+        sharing,
+        shared_directories,
+        search_timeout,
+        listen_port,
+    )
+    .is_some()
+    {
         println!(
             "  {}",
-            mission_hint(outcome.candidates.len(), sharing).unwrap_or_default()
+            mission_hint(
+                outcome.candidates.len(),
+                sharing,
+                shared_directories,
+                search_timeout,
+                listen_port,
+            )
+            .unwrap_or_default()
         );
     }
 
@@ -242,7 +273,13 @@ fn print_soulseek(outcome: &aldo_core::provider::ProviderOutcome, sharing: bool)
 
 /// A hint when a SoulSeek search comes back thin, since the usual cause is
 /// configuration rather than the query.
-fn mission_hint(found: usize, sharing: bool) -> Option<String> {
+fn mission_hint(
+    found: usize,
+    sharing: bool,
+    shared_directories: &[String],
+    search_timeout: Duration,
+    listen_port: u16,
+) -> Option<String> {
     if !sharing {
         return Some(
             "sharing nothing: peers queue this client last. Run \
@@ -251,11 +288,14 @@ fn mission_hint(found: usize, sharing: bool) -> Option<String> {
         );
     }
     if found == 0 {
-        return Some(
-            "nothing found: results come only from peers online right now, and an \
-             open port (2234) helps"
-                .to_owned(),
-        );
+        return Some(format!(
+            "nothing found after {}s; sharing {}. Results come only from \
+             peers online right now. Retry with `--slsk-timeout 20`; forwarding port \
+                 {} can improve availability",
+            search_timeout.as_secs(),
+            shared_directories.join(", "),
+            listen_port
+        ));
     }
     None
 }
@@ -480,14 +520,34 @@ mod tests {
 
     #[test]
     fn sharing_nothing_is_called_out_even_when_results_arrived() {
-        assert!(mission_hint(3, false).is_some_and(|hint| hint.contains("--slsk-share")));
-        assert!(mission_hint(3, true).is_none());
+        assert!(
+            mission_hint(3, false, &[], Duration::from_secs(8), 2234)
+                .is_some_and(|hint| hint.contains("--slsk-share"))
+        );
+        assert!(
+            mission_hint(
+                3,
+                true,
+                &["/music".to_owned()],
+                Duration::from_secs(8),
+                2234
+            )
+            .is_none()
+        );
     }
 
     #[test]
     fn an_empty_result_that_shared_is_explained_by_the_network_not_the_config() {
-        let hint = mission_hint(0, true).expect("a hint");
+        let hint = mission_hint(
+            0,
+            true,
+            &["/music".to_owned()],
+            Duration::from_secs(8),
+            2234,
+        )
+        .expect("a hint");
         assert!(hint.contains("peers online"), "{hint}");
+        assert!(hint.contains("--slsk-timeout 20"), "{hint}");
     }
 
     #[test]
