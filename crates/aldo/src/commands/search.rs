@@ -224,7 +224,7 @@ fn print_soulseek(
     let shown = outcome.candidates.len().min(MAX_SOULSEEK_RESULTS);
     println!();
     println!(
-        "Server: {} folders, {} files{}{}",
+        "Server: connected; {} folders, {} files{}{}",
         outcome.candidates.len(),
         outcome.raw_hits,
         if rejected > 0 {
@@ -241,6 +241,8 @@ fn print_soulseek(
 
     if mission_hint(
         outcome.candidates.len(),
+        outcome.raw_hits,
+        rejected,
         sharing,
         shared_directories,
         search_timeout,
@@ -252,6 +254,8 @@ fn print_soulseek(
             "  {}",
             mission_hint(
                 outcome.candidates.len(),
+                outcome.raw_hits,
+                rejected,
                 sharing,
                 shared_directories,
                 search_timeout,
@@ -275,6 +279,8 @@ fn print_soulseek(
 /// configuration rather than the query.
 fn mission_hint(
     found: usize,
+    raw_hits: u32,
+    rejected: u32,
     sharing: bool,
     shared_directories: &[String],
     search_timeout: Duration,
@@ -288,10 +294,16 @@ fn mission_hint(
         );
     }
     if found == 0 {
+        if rejected > 0 {
+            return Some(format!(
+                "connected and received {raw_hits} file hits, but all were rejected by \
+                 Aldo's lossless-file filters ({rejected} rejected); try a broader query"
+            ));
+        }
         return Some(format!(
-            "nothing found after {}s; sharing {}. Results come only from \
+            "no peer files returned after {}s; sharing {}. Results come only from \
              peers online right now. Retry with `--slsk-timeout 20`; forwarding port \
-                 {} can improve availability",
+             {} can improve availability",
             search_timeout.as_secs(),
             shared_directories.join(", "),
             listen_port
@@ -521,12 +533,14 @@ mod tests {
     #[test]
     fn sharing_nothing_is_called_out_even_when_results_arrived() {
         assert!(
-            mission_hint(3, false, &[], Duration::from_secs(8), 2234)
+            mission_hint(3, 3, 0, false, &[], Duration::from_secs(8), 2234)
                 .is_some_and(|hint| hint.contains("--slsk-share"))
         );
         assert!(
             mission_hint(
                 3,
+                3,
+                0,
                 true,
                 &["/music".to_owned()],
                 Duration::from_secs(8),
@@ -540,14 +554,33 @@ mod tests {
     fn an_empty_result_that_shared_is_explained_by_the_network_not_the_config() {
         let hint = mission_hint(
             0,
+            0,
+            0,
             true,
             &["/music".to_owned()],
             Duration::from_secs(8),
             2234,
         )
         .expect("a hint");
-        assert!(hint.contains("peers online"), "{hint}");
+        assert!(hint.contains("peer files returned"), "{hint}");
         assert!(hint.contains("--slsk-timeout 20"), "{hint}");
+    }
+
+    #[test]
+    fn filtered_hits_are_distinguished_from_an_empty_network_search() {
+        let hint = mission_hint(
+            0,
+            4,
+            4,
+            true,
+            &["/music".to_owned()],
+            Duration::from_secs(8),
+            2234,
+        )
+        .expect("a hint");
+        assert!(hint.contains("received 4 file hits"), "{hint}");
+        assert!(hint.contains("4 rejected"), "{hint}");
+        assert!(!hint.contains("--slsk-timeout"), "{hint}");
     }
 
     #[test]

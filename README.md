@@ -67,7 +67,7 @@ The output contains two useful parts:
 Discogs: 5 fetched, 0 cached, 50 reported
   Discogs #26707685  Surf’s Up - The Beach Boys (1971) | album | 10 tracks
 
-Server: 184 folders, 2375 files
+Server: connected; 184 folders, 2375 files
   #1   Beach Boys/2011 - The SMiLE Sessions  ...
   #2   Beach Boys/1971 - Surf's Up          ...
   #6   The Beach Boys/Surf's Up (1971)      ... 10 files ...
@@ -191,8 +191,12 @@ You can make the share directory explicit in `~/.config/aldo/.env`:
 ALDO_SLSK_SHARED=/home/you/Music
 ```
 
-When Aldo reports zero server results, it prints the effective share directory
-and timeout. This confirms which settings the command actually used.
+When Aldo reports zero server results, `connected` confirms that login
+completed. The diagnostic then distinguishes no peer files returned during the
+search window from raw hits rejected by Aldo's lossless-file filters, and
+prints the effective share directory, timeout, and listen port where relevant.
+An authentication or connection failure is reported separately instead of
+being presented as an empty search.
 
 If Discogs reports `not configured`, set:
 
