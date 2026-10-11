@@ -1,0 +1,27 @@
+pkgname=aldo
+pkgver=0.1.0
+pkgrel=2
+pkgdesc='Lossless album search, download, and Discogs tagging'
+arch=('x86_64')
+url='https://github.com/hwngtr/aldo'
+license=('MIT')
+depends=('glibc')
+makedepends=('cargo')
+optdepends=('flac: write FLAC tags with metaflac')
+
+build() {
+    CFLAGS='' CXXFLAGS='' RUSTFLAGS='' cargo build \
+        --manifest-path "$startdir/../Cargo.toml" \
+        --release \
+        --locked \
+        --package aldo
+}
+
+package() {
+    install -Dm755 "$startdir/../target/release/aldo" \
+        "$pkgdir/usr/bin/aldo"
+    install -Dm644 "$startdir/../README.md" \
+        "$pkgdir/usr/share/doc/aldo/README.md"
+    install -Dm644 "$startdir/../docs/TUI.md" \
+        "$pkgdir/usr/share/doc/aldo/TUI.md"
+}

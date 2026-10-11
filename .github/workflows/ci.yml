@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch makes the previous run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Debug info doubles the compile and link work, and nothing in CI reads it.
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_PROFILE_TEST_DEBUG: "0"
+  RUSTFLAGS: "-C debuginfo=0"
+
+jobs:
+  # Fails in under a minute, so a formatting slip never waits behind a build.
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          # Pinned, not `stable`. Clippy's lint set changes between releases, and
+          # with `-D warnings` a new release reddens main without a code change:
+          # 1.99 added `chunks_exact_to_as_chunks` and `duration_suboptimal_units`,
+          # which fired on code that had been clean the day before.
+          toolchain: "1.99.0"
+          components: rustfmt
+      - name: rustfmt
+        run: cargo fmt --all -- --check
+
+  # One job, not two: clippy and the tests share a target directory, so the
+  # workspace is compiled once. Splitting them would compile it twice, which is
+  # the difference between fitting the budget and not on a cold cache.
+  #
+  # Budget: the wall-clock time of this job stays under ten minutes at the 95th
+  # percentile. What keeps it there is the cache below plus the debug-info and
+  # incremental settings above; the timing step reports the figure on every run
+  # rather than leaving it to be guessed.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.99.0"
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # A flaky test must not also cost a full rebuild on the retry.
+          cache-on-failure: true
+          # One cache for the whole workspace, so pull requests restore the
+          # cache main left behind instead of building from nothing.
+          shared-key: workspace
+      - name: Start the clock
+        id: clock
+        run: echo "start=$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: clippy
+        run: cargo clippy --workspace --all-targets --features aldo/api --locked -- -D warnings
+      - name: test
+        run: cargo test --workspace --features aldo/api --locked
+      - name: Report the wall-clock budget
+        if: always() && steps.clock.outputs.start != ''
+        run: |
+          elapsed=$(( $(date +%s) - ${{ steps.clock.outputs.start }} ))
+          budget=600
+          echo "### CI time" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`${elapsed}s\` against a \`${budget}s\` budget." >> "$GITHUB_STEP_SUMMARY"
+          if [ "$elapsed" -gt "$budget" ]; then
+            echo "::warning::This run took ${elapsed}s, over the ${budget}s budget."
+          fi
