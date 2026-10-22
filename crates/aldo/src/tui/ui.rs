@@ -479,7 +479,7 @@ fn sources_panel(frame: &mut Frame, app: &App, area: Rect) {
             Row::new(vec![
                 Cell::from(format!("{}", index + 1)),
                 Cell::from(folder(candidate)),
-                Cell::from(locator.peer.clone()),
+                Cell::from(crate::out::terminal_safe(&locator.peer)),
                 Cell::from(candidate.display.track_count.to_string()),
                 Cell::from(candidate.total_bytes.to_string()),
                 Cell::from(quality(locator.bit_depth, locator.sample_rate)),
@@ -663,7 +663,11 @@ fn download(frame: &mut Frame, app: &App, area: Rect) {
                 theme::muted(),
             ),
             Span::styled(
-                format!("{} files   ·   peer {}", view.files.len(), view.peer),
+                format!(
+                    "{} files   ·   peer {}",
+                    view.files.len(),
+                    crate::out::terminal_safe(&view.peer)
+                ),
                 theme::muted(),
             ),
         ])),
@@ -688,7 +692,7 @@ fn download(frame: &mut Frame, app: &App, area: Rect) {
             let (label, style) = state_label(line.state);
             Row::new(vec![
                 Cell::from((index + 1).to_string()),
-                Cell::from(line.name.clone()),
+                Cell::from(crate::out::terminal_safe(&line.name)),
                 Cell::from(ByteSize::new(line.size).to_string()),
                 Cell::from(label).style(style),
             ])
@@ -990,7 +994,7 @@ fn files_view(frame: &mut Frame, files: &FilesView, area: Rect) {
         .map(|(index, file)| {
             Row::new(vec![
                 Cell::from((index + 1).to_string()),
-                Cell::from(basename(&file.path)),
+                Cell::from(crate::out::terminal_safe(&basename(&file.path))),
                 Cell::from(file.size.to_string()),
             ])
         })

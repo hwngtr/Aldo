@@ -635,6 +635,7 @@ struct TrackTags<'a> {
 /// metadata blocks and never the audio frames.
 fn write_flac_tags(path: &Path, tags: &TrackTags<'_>) -> Result<(), DownloadError> {
     let mut command = ProcessCommand::new("metaflac");
+    command.env_clear();
     for key in [
         "TITLE",
         "ALBUM",

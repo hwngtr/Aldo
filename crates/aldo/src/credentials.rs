@@ -150,8 +150,20 @@ fn save_at(path: &Path, credentials: &Credentials) -> Result<(), CredentialsErro
 
 /// Removes the three keys from a specific file. `Ok(false)` means no file.
 fn clear_at(path: &Path) -> Result<bool, CredentialsError> {
-    if !path.exists() {
-        return Ok(false);
+    match std::fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_symlink() => {
+            return Err(CredentialsError::Symlink {
+                path: path.to_path_buf(),
+            });
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(source) => {
+            return Err(CredentialsError::Read {
+                path: path.to_path_buf(),
+                source,
+            });
+        }
     }
     let existing = read_if_exists(path)?;
     let stripped = strip(&existing);
@@ -189,6 +201,14 @@ fn write_private(path: &Path, contents: &str) -> Result<(), CredentialsError> {
         source,
     })?;
     set_mode(dir, 0o700)?;
+
+    if let Ok(metadata) = std::fs::symlink_metadata(path)
+        && metadata.file_type().is_symlink()
+    {
+        return Err(CredentialsError::Symlink {
+            path: path.to_path_buf(),
+        });
+    }
 
     std::fs::write(path, contents).map_err(|source| CredentialsError::Write {
         path: path.to_path_buf(),
@@ -361,6 +381,9 @@ pub enum CredentialsError {
         path: PathBuf,
         source: std::io::Error,
     },
+
+    #[error("refusing to use symlinked credentials path {path}")]
+    Symlink { path: PathBuf },
 }
 
 #[cfg(test)]

@@ -59,11 +59,11 @@ async fn download(settings: &Settings, args: &DownloadArgs) -> Result<(), Downlo
 fn print_header(id: i64, plan: &DownloadPlan) {
     crate::outln!(
         "Candidate #{id}: {} - {} ({} files, {}) from peer '{}'",
-        or_unknown(&plan.artist, "Unknown Artist"),
-        or_unknown(&plan.album, "Unknown Album"),
+        crate::out::terminal_safe(or_unknown(&plan.artist, "Unknown Artist")),
+        crate::out::terminal_safe(or_unknown(&plan.album, "Unknown Album")),
         plan.files.len(),
         plan.total_bytes,
-        plan.peer().unwrap_or("unknown")
+        crate::out::terminal_safe(plan.peer().unwrap_or("unknown"))
     );
 }
 
@@ -72,20 +72,31 @@ fn print_file_list(result_index: i64, plan: &DownloadPlan) {
         "Candidate #{}: {} files from peer '{}'",
         result_index,
         plan.files.len(),
-        plan.peer().unwrap_or("unknown")
+        crate::out::terminal_safe(plan.peer().unwrap_or("unknown"))
     );
     for (index, file) in plan.files.iter().enumerate() {
-        crate::outln!("  {:>2}. {} ({})", index + 1, file.path, file.size);
+        crate::outln!(
+            "  {:>2}. {} ({})",
+            index + 1,
+            crate::out::terminal_safe(&file.path),
+            file.size
+        );
     }
 }
 
 fn print_event(event: &DownloadEvent) {
     match event {
         DownloadEvent::Connecting { username } => {
-            crate::outln!("Connecting to server as {username}...");
+            crate::outln!(
+                "Connecting to server as {}...",
+                crate::out::terminal_safe(username)
+            );
         }
         DownloadEvent::FileSkipped { index, total, name } => {
-            crate::outln!("  [{index}/{total}] {name} (already complete, skipping)");
+            crate::outln!(
+                "  [{index}/{total}] {} (already complete, skipping)",
+                crate::out::terminal_safe(name)
+            );
         }
         DownloadEvent::FileStarted {
             index,
@@ -93,7 +104,10 @@ fn print_event(event: &DownloadEvent) {
             name,
             size,
         } => {
-            crate::outln!("  [{index}/{total}] {name} ({size})...");
+            crate::outln!(
+                "  [{index}/{total}] {} ({size})...",
+                crate::out::terminal_safe(name)
+            );
         }
         DownloadEvent::Progress {
             bytes_done,

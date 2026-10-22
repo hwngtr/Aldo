@@ -20,6 +20,15 @@ impl axum::response::IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         use axum::http::StatusCode;
 
+        let public_message = match &self {
+            Self::BlankQuery => self.to_string(),
+            Self::UnknownCandidate(_) => self.to_string(),
+            Self::Store(_) | Self::Bind { .. } | Self::Catalog(_) => {
+                tracing::error!(error = %self, "API request failed");
+                "internal server error".to_owned()
+            }
+        };
+
         // A blank query or an unknown candidate is the caller's mistake;
         // everything else is a fault on this machine.
         let status = match &self {
@@ -29,7 +38,7 @@ impl axum::response::IntoResponse for ApiError {
             }
         };
 
-        (status, self.to_string()).into_response()
+        (status, public_message).into_response()
     }
 }
 

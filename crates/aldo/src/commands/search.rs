@@ -139,7 +139,12 @@ fn render_release(row: &CatalogRow) -> String {
 
     format!(
         "Discogs #{}  {} - {} ({}) | {} | {} tracks",
-        row.discogs_release_id, row.title, artist, year, kinds, row.track_count
+        row.discogs_release_id,
+        crate::out::terminal_safe(&row.title),
+        crate::out::terminal_safe(artist),
+        year,
+        kinds,
+        row.track_count
     )
 }
 
@@ -157,8 +162,8 @@ fn render_candidate(candidate: &Candidate, result_index: usize) -> String {
 
     format!(
         "#{result_index:<2}  {}  {}  {} files  {}  {}  {} advertised  {}",
-        folder_of(candidate),
-        locator.peer,
+        crate::out::terminal_safe(&folder_of(candidate)),
+        crate::out::terminal_safe(&locator.peer),
         candidate.display.track_count,
         candidate.total_bytes,
         quality(locator.bit_depth, locator.sample_rate),
